@@ -1,48 +1,47 @@
 """
-Database Schemas
+Database Schemas for FreeDAIY
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model represents a collection in MongoDB. The collection name is the lowercase of the class name.
 """
+from typing import Optional, List
+from pydantic import BaseModel, Field, HttpUrl, EmailStr
 
-from pydantic import BaseModel, Field
-from typing import Optional
 
-# Example schemas (replace with your own):
-
-class User(BaseModel):
+class Lead(BaseModel):
     """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
+    Leads captured from download forms or contact forms
+    Collection: "lead"
     """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    email: EmailStr = Field(..., description="Email address")
+    name: Optional[str] = Field(None, description="Full name")
+    interest: Optional[str] = Field(None, description="Area of interest (voice, n8n, make, self-hosted, consulting)")
+    asset: Optional[str] = Field(None, description="Requested asset identifier or slug")
+    message: Optional[str] = Field(None, description="Optional note or context")
+    source: Optional[str] = Field(None, description="Where the lead came from (download, hire, newsletter)")
+
+
+class BlogPost(BaseModel):
+    """
+    Blog posts for FreeDAIY
+    Collection: "blogpost"
+    """
+    title: str = Field(..., description="Post title")
+    slug: str = Field(..., description="URL-friendly slug")
+    excerpt: Optional[str] = Field(None, description="Short summary")
+    content: str = Field(..., description="Markdown or HTML content")
+    cover_image: Optional[HttpUrl] = Field(None, description="Cover image URL")
+    tags: List[str] = Field(default_factory=list, description="Tags for filtering")
+
 
 class Product(BaseModel):
     """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
+    Digital products such as n8n workflows, templates, automations
+    Collection: "product"
     """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
-
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+    title: str = Field(..., description="Product name")
+    slug: str = Field(..., description="URL-friendly slug")
+    description: Optional[str] = Field(None, description="What it does and how it helps")
+    category: str = Field(..., description="Category like n8n, make, voice, infra")
+    price: float = Field(0.0, ge=0, description="Price in USD; 0 for free")
+    download_url: Optional[HttpUrl] = Field(None, description="Direct download URL if public")
+    thumbnail: Optional[HttpUrl] = Field(None, description="Image URL")
